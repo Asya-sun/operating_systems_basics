@@ -7,6 +7,7 @@
 #include <fcntl.h>
 
 #define BUF_SIZE 1024
+#define NAME_LENGTH 256
 
 void file_contents(char path[]) {
     char line[32];
@@ -30,7 +31,7 @@ void make_dir(char path[]) {
 }
 
 void make_file(char path[]) {
-    int fd2 = open(path, O_CREAT | O_WRONLY, S_IRWXU | S_IRWXG | S_IROTH);
+    int fd2 = open(path, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU | S_IRWXG | S_IROTH);
     if (fd2 == -1) {
         printf("enable to create a file + %s\n", path);
         perror("open fd2");
@@ -56,7 +57,7 @@ void know_mod(char path[]) {
         perror("stat");
         return;
     }
-    printf("mode: %d\n", stat_info.st_mode);
+    printf("mode: 0%o\n", stat_info.st_mode & 0777);
     printf("number of hard links %ld\n", stat_info.st_nlink);
 }
 
@@ -126,49 +127,64 @@ void symlink_contents(char* filePath) {
 }
 
 
+void convert_func_name(char *src, char *dest) {
+    int len = strlen(src);
+    int count = len;
+    for (int i = 1; i <= len && (src[len - i] != '/'); ++i) {
+        count = i;
+    }
+    for (int i = 0; i < NAME_LENGTH; ++i) {dest[i] = '\0';}
+    for (int i = len - count; i < len; i++) {
+        dest[i - (len - count)] = src[i];
+    }
+}
+
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("not enough args");
         exit(EXIT_FAILURE);
     }
+    char file_name[NAME_LENGTH];
+    convert_func_name(argv[0], file_name);
+
+
+    if (argc == 2) {
+        if (strcmp(file_name, "file_contents") == 0) {
+            file_contents(argv[1]);
+        } else if (strcmp(file_name, "make_dir") == 0) {
+            make_dir(argv[1]);
+        } else if (strcmp(file_name, "make_file") == 0) {
+            make_file(argv[1]);
+        } else if (strcmp(file_name, "rm_dir") == 0) {
+            rm_dir(argv[1]);
+        } else if (strcmp(file_name, "rm_file") == 0) {
+            rm_file(argv[1]);
+        } else if (strcmp(file_name, "dir_contents") == 0) {
+            dir_contents(argv[1]);
+        } else if (strcmp(file_name, "rm_symlink") == 0) {
+            rm_file(argv[1]);
+        } else if (strcmp(file_name, "rm_hardlink") == 0) {
+            rm_file(argv[1]);
+        } else if (strcmp(file_name, "know_mode") == 0) {
+            know_mod(argv[1]);
+        } else if (strcmp(file_name, "symlink_contents") == 0) {
+            symlink_contents(argv[1]);
+        } else if (strcmp(file_name, "real_symlink_contents") == 0) {
+            read_by_symlink(argv[1]);
+        }
+        return 0;
+    }
+
     if (argc == 3) {
-        if (strcmp(argv[1], "file_contents") == 0) {
-            file_contents(argv[2]);
-        } else if (strcmp(argv[1], "make_dir") == 0) {
-            make_dir(argv[2]);
-        } else if (strcmp(argv[1], "make_file") == 0) {
-            make_file(argv[2]);
-        } else if (strcmp(argv[1], "rm_dir") == 0) {
-            rm_dir(argv[2]);
-        } else if (strcmp(argv[1], "rm_file") == 0) {
-            rm_file(argv[2]);
-        } else if (strcmp(argv[1], "dir_contents") == 0) {
-            dir_contents(argv[2]);
-        } else if (strcmp(argv[1], "rm_symlink") == 0) {
-            dir_contents(argv[2]);
-        } else if (strcmp(argv[1], "rm_hardlink") == 0) {
-            rm_file(argv[2]);
-        } else if (strcmp(argv[1], "know_mod") == 0) {
-            know_mod(argv[2]);
-        } else if (strcmp(argv[1], "symlink_contents") == 0) {
-            //file_contents(argv[2]);
-            symlink_contents(argv[2]);
-        } else if (strcmp(argv[1], "real_symlink_contents") == 0) {
-            read_by_symlink(argv[2]);
+        if (strcmp(file_name, "make_symlink") == 0) {
+            make_symlink(argv[1], argv[2]);
+        } else if (strcmp(file_name, "hard_link") == 0) {
+            hard_link(argv[1], argv[2]);
+        } else if (strcmp(file_name, "change_mode") == 0) {
+            change_mod(argv[1], strtoll( argv[2], NULL, 8));
         }
     }
-
-    if (argc == 4) {
-        if (strcmp(argv[1], "make_symlink") == 0) {
-            make_symlink(argv[2], argv[3]);
-        } else if (strcmp(argv[1], "hard_link") == 0) {
-            hard_link(argv[2], argv[3]);
-        } else if (strcmp(argv[1], "change_mod") == 0) {
-            change_mod(argv[2], strtoll( argv[3], NULL, 8));
-        }
-    }
-
-    printf("\n");
     printf("\n");
     return 0;
 }
