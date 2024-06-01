@@ -65,7 +65,7 @@ int main() {
             close(client_socket);
             exit(1);
         }
-        printf("get from server: %s\n", buffer);
+        printf("message from server: %s\n", buffer);
     }
 
     close(client_socket);
