@@ -1,0 +1,8 @@
+#!/bin/bash
+
+gcc -c hello_without_sys_calls.S -o main.o 
+ld main.o -o main   
+
+
+echo "res:";
+./main
